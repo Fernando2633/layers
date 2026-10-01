@@ -5,7 +5,7 @@
 #   DB_SCHEMA -> schema propio dentro de la BD (para compartir una sola BD entre varias apps)
 set -e
 
-RAW_URL="${DATABASE_URL:-$DB_URL}"
+RAW_URL="$(printf "%s" "${DATABASE_URL:-$DB_URL}" | tr -d "[:space:]\"'")"
 EXTRA_OPTS=""
 
 if [ -n "$RAW_URL" ]; then
