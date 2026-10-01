@@ -1,0 +1,11 @@
+# Blueprint de Render (opcional: tambien se puede crear el servicio a mano)
+services:
+  - type: web
+    name: layers-api
+    runtime: docker
+    plan: free
+    envVars:
+      - key: DATABASE_URL   # pegar la "Internal Database URL" de la BD en Render
+        sync: false
+      - key: DB_SCHEMA
+        value: layers

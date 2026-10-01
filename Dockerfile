@@ -1,28 +1,17 @@
-# ── Etapa 1: Build del JAR con Maven ──────────────────────────
-FROM eclipse-temurin:17-jdk-alpine AS build
+# Etapa 1: compilar con Maven
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
-
-# Copiar archivos de Maven primero (cache de dependencias)
-COPY mvnw .
-COPY .mvn .mvn
 COPY pom.xml .
+COPY src ./src
+RUN mvn -B -q clean package -DskipTests
 
-# Descargar dependencias (cacheadas si pom.xml no cambia)
-RUN ./mvnw dependency:go-offline -B
-
-# Copiar código fuente y compilar
-COPY src src
-RUN ./mvnw package -DskipTests -B
-
-# ── Etapa 2: Imagen final ligera ───────────────────────────────
+# Etapa 2: imagen ligera solo con el JAR
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-
-# Copiar solo el JAR generado
 COPY --from=build /app/target/*.jar app.jar
-
-# Puerto expuesto (Render lo sobreescribe con $PORT)
+COPY entrypoint.sh entrypoint.sh
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+ENV SPRING_PROFILES_ACTIVE=prod
 EXPOSE 8080
-
-# Arrancar con perfil de produccion
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
+ENTRYPOINT ["sh", "./entrypoint.sh"]
